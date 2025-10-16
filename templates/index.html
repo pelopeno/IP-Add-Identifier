@@ -1,60 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP Address Information</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #333;
-      text-align: center;
-      padding: 40px;
-    }
-    h1 {
-      color: #007BFF;
-    }
-    .card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      display: inline-block;
-      padding: 20px;
-      margin-top: 20px;
-      text-align: left;
-    }
-    p {
-      line-height: 1.5;
-    }
-    .refresh {
-      background: #007BFF;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    .refresh:hover {
-      background: #0056b3;
-    }
-  </style>
-</head>
-<body>
-  <h1>🌐 IP Address Information Tool</h1>
 
-  <div class="card">
-    <p><strong>IPv4:</strong> {{ ip_info.ipv4 }}</p>
-    <p><strong>IPv6:</strong> {{ ip_info.ipv6 }}</p>
-    <p><strong>City:</strong> {{ ip_info.city }}</p>
-    <p><strong>Region:</strong> {{ ip_info.region }}</p>
-    <p><strong>Country:</strong> {{ ip_info.country }}</p>
-    <p><strong>Organization:</strong> {{ ip_info.org }}</p>
-    <p><strong>Latitude:</strong> {{ ip_info.latitude }}</p>
-    <p><strong>Longitude:</strong> {{ ip_info.longitude }}</p>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-globe"></i> IP Address Information</h1>
+      <p>Discover your digital location and network details</p>
+    </div>
+
+    {% if ip_info.error %}
+    <div class="card">
+      <div class="card-content">
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Unable to fetch IP information</h3>
+          <p>{{ ip_info.error }}</p>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="main-grid">
+      <!-- Network Information Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-network-wired"></i>
+          <h2>Network Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-wifi"></i>
+                IPv4 Address
+              </div>
+              <div class="info-value">{{ ip_info.ipv4 or 'Not available' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-network-wired"></i>
+                IPv6 Address
+              </div>
+              <div class="info-value">{{ ip_info.ipv6 or 'Not available' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-building"></i>
+                IP Owner
+              </div>
+              <div class="info-value">{{ ip_info.owner or ip_info.org or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-server"></i>
+                ISP Provider
+              </div>
+              <div class="info-value">{{ ip_info.isp or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-code-branch"></i>
+                ASN
+              </div>
+              <div class="info-value">{{ ip_info.asn or 'Unknown' }}</div>
+            </div>
+            {% if ip_info.connection_type and ip_info.connection_type != 'Unknown' %}
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-link"></i>
+                Connection Type
+              </div>
+              <div class="info-value">{{ ip_info.connection_type }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Information Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-map-marker-alt"></i>
+          <h2>Location Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-city"></i>
+                City
+              </div>
+              <div class="info-value">{{ ip_info.city or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-map"></i>
+                Region
+              </div>
+              <div class="info-value">{{ ip_info.region or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-flag"></i>
+                Country
+              </div>
+              <div class="info-value">{{ ip_info.country or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-crosshairs"></i>
+                Coordinates
+              </div>
+              <div class="info-value">
+                {% if ip_info.latitude and ip_info.longitude %}
+                {{ "%.4f"|format(ip_info.latitude) }}, {{ "%.4f"|format(ip_info.longitude) }}
+                {% else %}
+                Unknown
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Map -->
+      <div class="card map-container">
+        <div class="card-header">
+          <i class="fas fa-map"></i>
+          <h2>Your Location on Map</h2>
+        </div>
+        <div class="card-content">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="actions">
+      <button class="btn btn-primary" id="refresh-btn">
+        <i class="fas fa-sync-alt"></i>
+        <span id="refresh-text">Refresh Data</span>
+      </button>
+      <button class="btn btn-secondary" id="copy-btn">
+        <i class="fas fa-copy"></i>
+        Copy IP Address
+      </button>
+    </div>
   </div>
 
-  <button class="refresh" onclick="location.reload()">🔄 Refresh</button>
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- App JavaScript -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+  <script>
+    // Pass IP data to the app and initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      {% if not ip_info.error %}
+      const ipData = {
+        ipv4: {{ ip_info.ipv4|tojson if ip_info.ipv4 else '""' }},
+        ipv6: {{ ip_info.ipv6|tojson if ip_info.ipv6 else '""' }},
+        city: {{ ip_info.city|tojson if ip_info.city else '""' }},
+        region: {{ ip_info.region|tojson if ip_info.region else '""' }},
+        country: {{ ip_info.country|tojson if ip_info.country else '""' }},
+        org: {{ ip_info.org|tojson if ip_info.org else '""' }},
+        latitude: {{ ip_info.latitude|tojson if ip_info.latitude is not none else 'null' }},
+        longitude: {{ ip_info.longitude|tojson if ip_info.longitude is not none else 'null' }},
+        error: false
+      };
+      {% else %}
+      const ipData = {
+        error: true,
+        errorMessage: {{ ip_info.error|tojson }}
+      };
+      {% endif %}
+
+      // Initialize the app with IP data
+      if (typeof initializeApp === 'function') {
+        initializeApp(ipData);
+      } else {
+        console.error('initializeApp function not found. Make sure app.js is loaded correctly.');
+      }
+    });
+  </script>
 </body>
+
 </html>
