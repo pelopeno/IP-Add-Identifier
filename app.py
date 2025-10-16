@@ -118,9 +118,77 @@ def get_enhanced_ip_info(ip):
     
     return None
 
+def sanitize_sensitive_data(data):
+    """
+    Sanitize sensitive information before displaying
+    """
+    # List of patterns that might indicate internal/private networks
+    private_indicators = [
+        'internal', 'private', 'corp', 'intranet', 'lan', 'vpn',
+        'employee', 'staff', 'admin', 'secure'
+    ]
+    
+    # Sanitize organization names that might reveal too much
+    if data.get('org'):
+        org_lower = data['org'].lower()
+        for indicator in private_indicators:
+            if indicator in org_lower:
+                data['org'] = "Private Network"
+                break
+    
+    if data.get('owner'):
+        owner_lower = data['owner'].lower()
+        for indicator in private_indicators:
+            if indicator in owner_lower:
+                data['owner'] = "Private Network"
+                break
+    
+    # Don't show exact coordinates for certain sensitive networks
+    if data.get('org') and any(word in data['org'].lower() for word in ['government', 'military', 'defense']):
+        if data.get('latitude') and data.get('longitude'):
+            # Round coordinates to reduce precision
+            data['latitude'] = round(float(data['latitude']), 1)
+            data['longitude'] = round(float(data['longitude']), 1)
+    
+    return data
+
+def is_private_ip(ip):
+    """
+    Check if IP address is in private range
+    """
+    try:
+        import ipaddress
+        ip_obj = ipaddress.ip_address(ip)
+        return ip_obj.is_private
+    except:
+        # Fallback check for common private ranges
+        if ip.startswith(('192.168.', '10.', '172.')):
+            return True
+        if ip.startswith('127.'):  # Localhost
+            return True
+        return False
+
+def add_privacy_notice(result):
+    """
+    Add privacy information to the result
+    """
+    privacy_info = {
+        'privacy_notice': 'This information is publicly available through your internet connection.',
+        'data_retention': 'Location data is approximate and cached temporarily for performance.',
+        'is_private_ip': False
+    }
+    
+    if result.get('ipv4'):
+        privacy_info['is_private_ip'] = is_private_ip(result['ipv4'])
+        if privacy_info['is_private_ip']:
+            privacy_info['privacy_notice'] = 'Private IP detected. Limited information available.'
+    
+    result.update(privacy_info)
+    return result
+
 def get_ip_info():
     """
-    Fetch IP information with proper error handling and no infinite loops
+    Fetch IP information with privacy controls
     """
     try:
         # Get IPv4 address with caching
@@ -294,6 +362,14 @@ def get_ip_info():
             except Exception as e:
                 logger.warning(f"WHOIS lookup failed (non-critical): {e}")
 
+        # Apply privacy controls and sanitization
+        result = sanitize_sensitive_data(result)
+        result = add_privacy_notice(result)
+        
+        # Remove exact postal codes for privacy
+        if result.get('postal') and result['postal'] != 'Unknown':
+            result['postal'] = result['postal'][:3] + 'XXX'  # Show only first 3 digits
+        
         logger.info(f"IP info gathering completed. APIs tried: {apis_tried}")
         return result
             
@@ -324,6 +400,16 @@ def api_ip_info():
     API endpoint that returns IP information as JSON
     """
     return get_ip_info()
+
+@app.route("/api/clear-cache", methods=['POST'])
+def clear_cache():
+    """
+    Clear the application cache
+    """
+    global _cache
+    _cache.clear()
+    logger.info("Cache cleared by user request")
+    return {"status": "success", "message": "Cache cleared successfully"}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

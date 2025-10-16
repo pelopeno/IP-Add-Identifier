@@ -275,6 +275,74 @@ body {
   line-height: 1.5;
 }
 
+/* Privacy notice styling */
+.privacy-notice {
+  margin-bottom: var(--spacing-lg);
+  border-left: 4px solid var(--info);
+}
+
+.privacy-info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.privacy-info i {
+  color: var(--info);
+  font-size: 1.5rem;
+  margin-top: 0.2rem;
+}
+
+.privacy-info h4 {
+  color: var(--text);
+  margin-bottom: var(--spacing-xs);
+  font-size: 1.1rem;
+}
+
+.privacy-info p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.privacy-icon {
+  color: var(--warning) !important;
+  font-size: 0.8rem !important;
+  margin-left: var(--spacing-xs);
+  cursor: help;
+}
+
+.privacy-badge {
+  background: var(--warning);
+  color: var(--bg-dark);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.map-disclaimer {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--bg);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.map-disclaimer i {
+  color: var(--warning);
+  font-size: 0.9rem;
+}
+
+.map-disclaimer small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

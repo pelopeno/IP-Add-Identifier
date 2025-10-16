@@ -200,6 +200,35 @@ function showCopySuccess() {
     }
 }
 
+// Clear cached data functionality
+function clearCachedData() {
+    const clearBtn = document.getElementById('clear-cache-btn');
+    if (clearBtn) {
+        const originalText = clearBtn.innerHTML;
+        clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+        clearBtn.disabled = true;
+        
+        // Make request to clear server cache
+        fetch('/api/clear-cache', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                clearBtn.innerHTML = '<i class="fas fa-check"></i> Cleared!';
+                setTimeout(() => {
+                    clearBtn.innerHTML = originalText;
+                    clearBtn.disabled = false;
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Failed to clear cache:', error);
+                clearBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed';
+                setTimeout(() => {
+                    clearBtn.innerHTML = originalText;
+                    clearBtn.disabled = false;
+                }, 2000);
+            });
+    }
+}
+
 // Setup event listeners
 function setupEventListeners() {
     // Refresh button with debouncing
@@ -221,6 +250,12 @@ function setupEventListeners() {
     const copyBtn = document.getElementById('copy-btn');
     if (copyBtn) {
         copyBtn.addEventListener('click', copyToClipboard);
+    }
+
+    // Clear cache button
+    const clearCacheBtn = document.getElementById('clear-cache-btn');
+    if (clearCacheBtn) {
+        clearCacheBtn.addEventListener('click', clearCachedData);
     }
 }
 

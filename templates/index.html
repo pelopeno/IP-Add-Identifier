@@ -37,6 +37,25 @@
       </div>
     </div>
     {% else %}
+    
+    <!-- Privacy Notice -->
+    {% if ip_info.privacy_notice %}
+    <div class="card privacy-notice">
+      <div class="card-content">
+        <div class="privacy-info">
+          <i class="fas fa-shield-alt"></i>
+          <div>
+            <h4>Privacy Information</h4>
+            <p>{{ ip_info.privacy_notice }}</p>
+            {% if ip_info.is_private_ip %}
+            <p><strong>Note:</strong> You appear to be on a private network. Some information may be limited.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="main-grid">
       <!-- Network Information Card -->
       <div class="card">
@@ -88,6 +107,17 @@
                 Connection Type
               </div>
               <div class="info-value">{{ ip_info.connection_type }}</div>
+            </div>
+            {% endif %}
+            
+            {% if ip_info.postal and ip_info.postal != 'Unknown' %}
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-map-pin"></i>
+                Postal Code (Partial)
+                <i class="fas fa-info-circle privacy-icon" title="Only partial postal code shown for privacy"></i>
+              </div>
+              <div class="info-value">{{ ip_info.postal }}</div>
             </div>
             {% endif %}
           </div>
@@ -144,10 +174,15 @@
       <div class="card map-container">
         <div class="card-header">
           <i class="fas fa-map"></i>
-          <h2>Your Location on Map</h2>
+          <h2>Approximate Location</h2>
+          <span class="privacy-badge">Approximate</span>
         </div>
         <div class="card-content">
           <div id="map"></div>
+          <div class="map-disclaimer">
+            <i class="fas fa-info-circle"></i>
+            <small>Location is approximate and may not reflect your exact position. Based on IP geolocation data.</small>
+          </div>
         </div>
       </div>
     </div>
@@ -161,6 +196,10 @@
       <button class="btn btn-secondary" id="copy-btn">
         <i class="fas fa-copy"></i>
         Copy IP Address
+      </button>
+      <button class="btn btn-secondary" id="clear-cache-btn">
+        <i class="fas fa-trash"></i>
+        Clear Cached Data
       </button>
     </div>
   </div>
