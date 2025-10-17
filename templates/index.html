@@ -222,6 +222,8 @@
         region: {{ ip_info.region|tojson if ip_info.region else '""' }},
         country: {{ ip_info.country|tojson if ip_info.country else '""' }},
         org: {{ ip_info.org|tojson if ip_info.org else '""' }},
+        owner: {{ ip_info.owner|tojson if ip_info.owner else '""' }},
+        isp: {{ ip_info.isp|tojson if ip_info.isp else '""' }},
         latitude: {{ ip_info.latitude|tojson if ip_info.latitude is not none else 'null' }},
         longitude: {{ ip_info.longitude|tojson if ip_info.longitude is not none else 'null' }},
         error: false
