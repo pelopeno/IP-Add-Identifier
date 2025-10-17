@@ -208,9 +208,7 @@ def get_ip_info():
                 ipv6_data = ipv6_response.json()
                 fetched_ipv6 = ipv6_data.get("ip", "")
                 
-                # Check if the returned IP is actually IPv6 and different from IPv4
                 if fetched_ipv6 and fetched_ipv6 != ipv4:
-                    # Simple check for IPv6 format (contains colons)
                     if ':' in fetched_ipv6:
                         ipv6 = fetched_ipv6
                         logger.info(f"IPv6 address found: {ipv6}")
