@@ -87,10 +87,10 @@ A modern web application that provides detailed insights about IP addresses — 
 
 ## Feature Usage
 
-* ** Refresh Data:** Click the refresh button to get the latest IP information
-* ** Copy IP:** Quickly copy your detected IP address to clipboard
-* ** Clear Cache:** Remove saved IP data from browser storage
-* ** Interactive Map:** Explore your IP’s approximate location
+* **Refresh Data:** Click the refresh button to get the latest IP information
+* **Copy IP:** Quickly copy your detected IP address to clipboard
+* **Clear Cache:** Remove saved IP data from browser storage
+* **Interactive Map:** Explore your IP’s approximate location
 
 ---
 
