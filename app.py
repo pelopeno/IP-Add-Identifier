@@ -206,7 +206,20 @@ def get_ip_info():
             ipv6_response = requests.get("https://api64.ipify.org?format=json", timeout=5)
             if ipv6_response.status_code == 200:
                 ipv6_data = ipv6_response.json()
-                ipv6 = ipv6_data.get("ip", "Not available")
+                fetched_ipv6 = ipv6_data.get("ip", "")
+                
+                # Check if the returned IP is actually IPv6 and different from IPv4
+                if fetched_ipv6 and fetched_ipv6 != ipv4:
+                    # Simple check for IPv6 format (contains colons)
+                    if ':' in fetched_ipv6:
+                        ipv6 = fetched_ipv6
+                        logger.info(f"IPv6 address found: {ipv6}")
+                    else:
+                        logger.info("IPv6 service returned IPv4 address, no IPv6 available")
+                        ipv6 = "Not available"
+                else:
+                    logger.info("No IPv6 address available or same as IPv4")
+                    ipv6 = "Not available"
         except Exception as e:
             logger.warning(f"IPv6 fetch failed (non-critical): {e}")
             ipv6 = "Not available"
