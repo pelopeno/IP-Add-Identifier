@@ -4,15 +4,12 @@ import logging
 import time
 from functools import wraps
 
-app = Flask(__name__, static_folder='templates', static_url_path='/static')
-
-# Configure logging
+app = Flask(__name__, static_folder='templates', static_url_path='/')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Simple in-memory cache to prevent repeated API calls
 _cache = {}
-_cache_timeout = 300  # 5 minutes cache
+_cache_timeout = 300  
 
 def cache_result(timeout=300):
     """Decorator to cache function results"""
@@ -22,18 +19,15 @@ def cache_result(timeout=300):
             cache_key = f"{func.__name__}_{str(args)}_{str(kwargs)}"
             current_time = time.time()
             
-            # Check if we have cached result that's still valid
             if cache_key in _cache:
                 cached_time, cached_result = _cache[cache_key]
                 if current_time - cached_time < timeout:
                     logger.info(f"Returning cached result for {func.__name__}")
                     return cached_result
             
-            # Get fresh result and cache it
             result = func(*args, **kwargs)
             _cache[cache_key] = (current_time, result)
             
-            # Clean old cache entries
             keys_to_remove = []
             for key, (cache_time, _) in _cache.items():
                 if current_time - cache_time > timeout:
@@ -59,7 +53,7 @@ def get_whois_info(ip):
         
         if response.status_code == 200:
             data = response.json()
-            if data.get("success", True):  # Check if API call was successful
+            if data.get("success", True):
                 return {
                     "owner": data.get("org", "Unknown"),
                     "isp": data.get("isp", "Unknown"),
@@ -122,13 +116,11 @@ def sanitize_sensitive_data(data):
     """
     Sanitize sensitive information before displaying
     """
-    # List of patterns that might indicate internal/private networks
     private_indicators = [
         'internal', 'private', 'corp', 'intranet', 'lan', 'vpn',
         'employee', 'staff', 'admin', 'secure'
     ]
     
-    # Sanitize organization names that might reveal too much
     if data.get('org'):
         org_lower = data['org'].lower()
         for indicator in private_indicators:
@@ -143,10 +135,8 @@ def sanitize_sensitive_data(data):
                 data['owner'] = "Private Network"
                 break
     
-    # Don't show exact coordinates for certain sensitive networks
     if data.get('org') and any(word in data['org'].lower() for word in ['government', 'military', 'defense']):
         if data.get('latitude') and data.get('longitude'):
-            # Round coordinates to reduce precision
             data['latitude'] = round(float(data['latitude']), 1)
             data['longitude'] = round(float(data['longitude']), 1)
     
@@ -161,10 +151,9 @@ def is_private_ip(ip):
         ip_obj = ipaddress.ip_address(ip)
         return ip_obj.is_private
     except:
-        # Fallback check for common private ranges
         if ip.startswith(('192.168.', '10.', '172.')):
             return True
-        if ip.startswith('127.'):  # Localhost
+        if ip.startswith('127.'):  # Localhost dito
             return True
         return False
 
@@ -191,17 +180,14 @@ def get_ip_info():
     Fetch IP information with privacy controls
     """
     try:
-        # Get IPv4 address with caching
         cache_key = "current_ipv4"
         current_time = time.time()
         
-        # Check cache first
         if cache_key in _cache:
             cached_time, ipv4 = _cache[cache_key]
-            if current_time - cached_time < 60:  # Cache IP for 1 minute
+            if current_time - cached_time < 60:  
                 logger.info("Using cached IPv4 address")
             else:
-                # Refresh IP
                 logger.info("Fetching fresh IPv4 address...")
                 ipv4_response = requests.get("https://api.ipify.org?format=json", timeout=10)
                 ipv4_response.raise_for_status()
@@ -214,7 +200,6 @@ def get_ip_info():
             ipv4 = ipv4_response.json().get("ip")
             _cache[cache_key] = (current_time, ipv4)
         
-        # Try to get IPv6 address (non-critical) - improved detection
         ipv6 = "Not available"
         try:
             logger.info("Fetching IPv6 address...")
@@ -242,7 +227,6 @@ def get_ip_info():
         if not ipv4:
             raise Exception("Unable to determine IP address")
 
-        # Initialize result with basic info
         result = {
             "ipv4": ipv4,
             "ipv6": ipv6,
@@ -262,12 +246,10 @@ def get_ip_info():
             "ip_type": "Unknown"
         }
 
-        # Try to get geolocation data (with single attempt per API)
         geo_data = None
         apis_tried = 0
-        max_apis = 3  # Limit to prevent infinite loops
+        max_apis = 3  
         
-        # Try primary API first
         if apis_tried < max_apis:
             try:
                 apis_tried += 1
@@ -282,7 +264,6 @@ def get_ip_info():
                 logger.warning(f"Primary API failed: {e}")
                 geo_data = None
         
-        # Try fallback API if primary failed
         if not geo_data and apis_tried < max_apis:
             try:
                 apis_tried += 1
@@ -314,7 +295,6 @@ def get_ip_info():
                 logger.warning(f"Fallback API failed: {e}")
                 geo_data = None
 
-        # Try final fallback API
         if not geo_data and apis_tried < max_apis:
             try:
                 apis_tried += 1
@@ -324,7 +304,6 @@ def get_ip_info():
                 ipinfo_response.raise_for_status()
                 ipinfo_data = ipinfo_response.json()
                 
-                # Parse location
                 loc_parts = ipinfo_data.get("loc", "").split(",")
                 latitude = float(loc_parts[0]) if len(loc_parts) > 0 and loc_parts[0] else None
                 longitude = float(loc_parts[1]) if len(loc_parts) > 1 and loc_parts[1] else None
@@ -346,7 +325,6 @@ def get_ip_info():
                 logger.warning(f"Final fallback API failed: {e}")
                 logger.info("All geolocation APIs failed, returning basic IP info")
 
-        # Update result with geo data if available
         if geo_data:
             result.update({
                 "city": geo_data.get("city", "Unknown"),
@@ -362,7 +340,6 @@ def get_ip_info():
                 "connection_type": geo_data.get("connection_type", "Unknown")
             })
             
-            # Try to get WHOIS data (optional, non-blocking)
             try:
                 whois_data = get_whois_info(ipv4)
                 if whois_data:
@@ -375,13 +352,11 @@ def get_ip_info():
             except Exception as e:
                 logger.warning(f"WHOIS lookup failed (non-critical): {e}")
 
-        # Apply privacy controls and sanitization
         result = sanitize_sensitive_data(result)
         result = add_privacy_notice(result)
         
-        # Remove exact postal codes for privacy
         if result.get('postal') and result['postal'] != 'Unknown':
-            result['postal'] = result['postal'][:3] + 'XXX'  # Show only first 3 digits
+            result['postal'] = result['postal'][:3] + 'XXX'  
         
         logger.info(f"IP info gathering completed. APIs tried: {apis_tried}")
         return result
