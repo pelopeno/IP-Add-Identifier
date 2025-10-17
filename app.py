@@ -4,8 +4,7 @@ import logging
 import time
 from functools import wraps
 
-app = Flask(__name__, static_folder='templates', static_url_path='/static')
-
+app = Flask(__name__, static_folder='templates', static_url_path='/')
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

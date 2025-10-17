@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IP Address Information</title>
+  <title>IP Address Identifier</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -22,8 +22,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1><i class="fas fa-globe"></i> IP Address Information</h1>
-      <p>Discover your digital location and network details</p>
+      <img src="{{ url_for('static', filename='logo.png') }}" />
     </div>
 
     {% if ip_info.error %}
@@ -37,24 +36,22 @@
       </div>
     </div>
     {% else %}
-    
-    <!-- Privacy Notice -->
-    {% if ip_info.privacy_notice %}
-    <div class="card privacy-notice">
-      <div class="card-content">
-        <div class="privacy-info">
-          <i class="fas fa-shield-alt"></i>
-          <div>
-            <h4>Privacy Information</h4>
-            <p>{{ ip_info.privacy_notice }}</p>
-            {% if ip_info.is_private_ip %}
-            <p><strong>Note:</strong> You appear to be on a private network. Some information may be limited.</p>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="refresh-btn">
+        <i class="fas fa-sync-alt"></i>
+        <span id="refresh-text">Refresh Data</span>
+      </button>
+      <button class="btn btn-secondary" id="copy-btn">
+        <i class="fas fa-copy"></i>
+        Copy IP Address
+      </button>
+      <button class="btn btn-secondary" id="clear-cache-btn">
+        <i class="fas fa-trash"></i>
+        Clear Cached Data
+      </button>
     </div>
-    {% endif %}
+    <br>
 
     <div class="main-grid">
       <!-- Network Information Card -->
@@ -109,7 +106,7 @@
               <div class="info-value">{{ ip_info.connection_type }}</div>
             </div>
             {% endif %}
-            
+
             {% if ip_info.postal and ip_info.postal != 'Unknown' %}
             <div class="info-item">
               <div class="info-label">
@@ -175,34 +172,39 @@
         <div class="card-header">
           <i class="fas fa-map"></i>
           <h2>Approximate Location</h2>
-          <span class="privacy-badge">Approximate</span>
         </div>
         <div class="card-content">
           <div id="map"></div>
           <div class="map-disclaimer">
             <i class="fas fa-info-circle"></i>
-            <small>Location is approximate and may not reflect your exact position. Based on IP geolocation data.</small>
+            <small>Location is approximate and may not reflect your exact position. Based on IP geolocation
+              data.</small>
           </div>
         </div>
       </div>
     </div>
     {% endif %}
 
-    <div class="actions">
-      <button class="btn btn-primary" id="refresh-btn">
-        <i class="fas fa-sync-alt"></i>
-        <span id="refresh-text">Refresh Data</span>
-      </button>
-      <button class="btn btn-secondary" id="copy-btn">
-        <i class="fas fa-copy"></i>
-        Copy IP Address
-      </button>
-      <button class="btn btn-secondary" id="clear-cache-btn">
-        <i class="fas fa-trash"></i>
-        Clear Cached Data
-      </button>
+
+    <!-- Privacy Notice -->
+    {% if ip_info.privacy_notice %}
+    <div class="card privacy-notice">
+      <div class="card-content">
+        <div class="privacy-info">
+          <i class="fas fa-shield-alt"></i>
+          <div>
+            <h4>Privacy Information</h4>
+            <p>{{ ip_info.privacy_notice }}</p>
+            {% if ip_info.is_private_ip %}
+            <p><strong>Note:</strong> You appear to be on a private network. Some information may be limited.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
+    {% endif %}
   </div>
+
 
   <!-- Leaflet JavaScript -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -213,32 +215,33 @@
 
   <script>
     // Pass IP data to the app and initialize
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       {% if not ip_info.error %}
       const ipData = {
-        ipv4: {{ ip_info.ipv4|tojson if ip_info.ipv4 else '""' }},
-        ipv6: {{ ip_info.ipv6|tojson if ip_info.ipv6 else '""' }},
-        city: {{ ip_info.city|tojson if ip_info.city else '""' }},
-        region: {{ ip_info.region|tojson if ip_info.region else '""' }},
-        country: {{ ip_info.country|tojson if ip_info.country else '""' }},
-        org: {{ ip_info.org|tojson if ip_info.org else '""' }},
-        latitude: {{ ip_info.latitude|tojson if ip_info.latitude is not none else 'null' }},
-        longitude: {{ ip_info.longitude|tojson if ip_info.longitude is not none else 'null' }},
-        error: false
+        ipv4: {{ ip_info.ipv4| tojson if ip_info.ipv4 else '""'
+    }},
+      ipv6: {{ ip_info.ipv6 | tojson if ip_info.ipv6 else '""' }},
+      city: {{ ip_info.city | tojson if ip_info.city else '""' }},
+      region: {{ ip_info.region | tojson if ip_info.region else '""' }},
+      country: {{ ip_info.country | tojson if ip_info.country else '""' }},
+      org: {{ ip_info.org | tojson if ip_info.org else '""' }},
+      latitude: {{ ip_info.latitude | tojson if ip_info.latitude is not none else 'null' }},
+      longitude: {{ ip_info.longitude | tojson if ip_info.longitude is not none else 'null' }},
+      error: false
       };
-      {% else %}
-      const ipData = {
-        error: true,
-        errorMessage: {{ ip_info.error|tojson }}
+    {% else %}
+    const ipData = {
+      error: true,
+      errorMessage: {{ ip_info.error| tojson }}
       };
-      {% endif %}
+    {% endif %}
 
-      // Initialize the app with IP data
-      if (typeof initializeApp === 'function') {
-        initializeApp(ipData);
-      } else {
-        console.error('initializeApp function not found. Make sure app.js is loaded correctly.');
-      }
+    // Initialize the app with IP data
+    if (typeof initializeApp === 'function') {
+      initializeApp(ipData);
+    } else {
+      console.error('initializeApp function not found. Make sure app.js is loaded correctly.');
+    }
     });
   </script>
 </body>

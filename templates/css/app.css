@@ -1,19 +1,19 @@
 :root {
-  --bg-dark: hsl(67 100% 1%);
-  --bg: hsl(68 69% 3%);
-  --bg-light: hsl(67 41% 6%);
-  --text: hsl(69 68% 89%);
-  --text-muted: hsl(68 20% 64%);
-  --highlight: hsl(67 19% 34%);
-  --border: hsl(67 27% 23%);
-  --border-muted: hsl(66 49% 13%);
-  --primary: hsl(67 35% 57%);
-  --secondary: hsl(253 63% 78%);
-  --danger: hsl(9 26% 64%);
-  --warning: hsl(52 19% 57%);
-  --success: hsl(146 17% 59%);
-  --info: hsl(217 28% 65%);
-  
+  --bg-dark: #29323b;
+  --bg: #29323b;
+  --bg-light: #29323b;
+  --text: #ffffff;
+  --text-muted: #ffffff;
+  --highlight: #ffffff;
+  --border: #ffffff;
+  --border-muted: #ffffff;
+  --primary: #ffffff;
+  --secondary: #ffffff;
+  --danger: #ffffff;
+  --warning: #ffffff;
+  --success: #ffffff;
+  --info: #ffffff;
+
   /* Modern minimal design variables */
   --card-bg: var(--bg-light);
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -28,6 +28,7 @@
   --spacing-xl: 3rem;
 }
 
+
 * {
   margin: 0;
   padding: 0;
@@ -35,7 +36,7 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -83,9 +84,9 @@ body {
 
 .card {
   background: var(--card-bg);
-  border: 1px solid var(--border-muted);
   border-radius: var(--border-radius);
-  box-shadow: var(--shadow-subtle);
+  outline: 2px solid grey;
+  box-shadow: var(--shadow-medium);
   overflow: hidden;
   transition: var(--transition);
 }
@@ -97,7 +98,7 @@ body {
 }
 
 .card-header {
-  background: var(--highlight);
+  background: #ffda3a;
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--border-muted);
   display: flex;
@@ -107,7 +108,7 @@ body {
 
 .card-header i {
   font-size: 1.25rem;
-  color: var(--primary);
+  color: #222a34;
   width: 24px;
   text-align: center;
 }
@@ -115,7 +116,7 @@ body {
 .card-header h2 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text);
+  color: #222a34;
   margin: 0;
 }
 
@@ -135,13 +136,13 @@ body {
   align-items: center;
   padding: var(--spacing-md);
   background: var(--bg);
-  border: 1px solid var(--border-muted);
+  border: 1px solid grey;
   border-radius: var(--border-radius-sm);
   transition: var(--transition);
 }
 
 .info-item:hover {
-  background: var(--highlight);
+  background: #222a34;
   border-color: var(--border);
 }
 
@@ -224,7 +225,7 @@ body {
 }
 
 .btn-secondary:hover {
-  background: var(--highlight);
+  background: #3f4a58;
   border-color: var(--primary);
   color: var(--primary);
   transform: translateY(-1px);
@@ -495,4 +496,13 @@ body {
 .leaflet-control-container .leaflet-control a:hover {
   background: var(--highlight);
   color: var(--primary);
+}
+
+.header img {
+  width: 500px;
+  height: auto;
+}
+
+body {
+  background-image: url('/bg.png') !important;
 }
