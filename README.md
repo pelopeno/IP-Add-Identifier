@@ -46,9 +46,6 @@ A modern web application that provides detailed insights about IP addresses — 
 **Custom IP Lookup (3 days)**  
 Allow users to manually enter or paste any IP address or domain for lookup instead of only detecting their own.
 
-**Enhanced ISP Accuracy (2 days)**  
-Integrate additional APIs (e.g., `ipinfo.io`, `ip-api.com`) to improve accuracy and include more ISP details such as organization and ASN.
-
 **UI/UX Improvements (3 days)**  
 Implement a dark/light theme toggle, add icons, and improve responsiveness for both desktop and mobile users.
 
