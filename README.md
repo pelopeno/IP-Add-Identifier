@@ -150,6 +150,44 @@ Navigate to: **http://localhost:5000**
 
 ---
 
+## Project Backlog (Future Enhancements)
+
+### High Priority Items
+
+**Custom IP Lookup (3 days)**  
+Allow users to manually enter or paste any IP address or domain for lookup instead of only detecting their own.
+
+**UI/UX Improvements (3 days)**  
+Implement a dark/light theme toggle, add icons, and improve responsiveness for both desktop and mobile users.
+
+---
+
+### Medium Priority Items
+
+**VPN/Proxy Detection (3 days)**  
+Add functionality to detect and flag IPs associated with VPNs, proxies, or anonymizers for transparency.
+
+**Time Zone & Weather Information (2 days)**  
+Display the local time and weather conditions based on the detected IP’s location.
+
+**Data Export Feature (3 days)**  
+Enable exporting of IP details to formats like PDF, JSON, or TXT for documentation or sharing.
+
+---
+
+### Low Priority Items
+
+**Speed Test Integration (4 days)**  
+Add network speed and latency testing features to complement the IP and location details.
+
+**Search History / Recent Lookups (4 days)**  
+Store recent searches locally so users can quickly revisit previous IP results.
+
+**Multi-Language Support (5 days)**  
+Offer translation options for key UI text and location labels (e.g., English, Filipino, Spanish)..
+
+---
+
 ## Feature Usage
 
 * **Refresh Data:** Click the refresh button to get the latest IP information
