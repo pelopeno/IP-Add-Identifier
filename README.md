@@ -17,7 +17,7 @@ A modern Flask web application that displays comprehensive IP address informatio
 
 ## Screenshots
 
-![Main Interface](screenshots/main-interface.png)
+![Main Interface](public/images/image.png)
 *Clean, modern interface showing network and location information*
 
 ## Prerequisites
