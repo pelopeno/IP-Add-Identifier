@@ -1,6 +1,13 @@
 # IP Address Identifier
 
-A modern web application that provides detailed insights about IP addresses — including **geolocation data**, **network details**, and an **interactive map visualization**. Designed with privacy and clarity in mind.
+A modern Flask web application that displays comprehensive IP address information including geolocation, ISP details, network information, and interactive maps with privacy controls.
+
+![IP Address Identifier](templates/logo.png)
+
+## Screenshots
+
+![Main Interface](public/images/image.png)
+*Clean, modern interface showing network and location information*
 
 ---
 
@@ -93,32 +100,128 @@ Offer translation options for key UI text and location labels (e.g., English, Fi
 
 ---
 
-## Setup
+## Installation Guide
 
-1. **Clone the repository:**
+### Method 1: Download ZIP (Recommended for beginners)
 
+1. **Download the application**
+   - Click the "Download ZIP" button on the repository page
+   - Extract the ZIP file to your desired location
+   - Navigate to the extracted folder
+
+2. **Open Command Prompt/Terminal**
+   ```bash
+   # Windows: Press Win + R, type 'cmd', press Enter
+   # macOS: Press Cmd + Space, type 'terminal', press Enter
+   # Linux: Press Ctrl + Alt + T
+   ```
+
+3. **Navigate to the project directory**
+   ```bash
+   cd "C:\your\path\name\yourfolder\SomethingIPAdd\IP-Add-Identifier"
+   ```
+
+### Method 2: Git Clone (For developers)
+
+1. **Clone the repository**
    ```bash
    git clone https://github.com/yourusername/ip-address-identifier.git
    cd ip-address-identifier
    ```
 
-2. **Install dependencies:**
+## Setup Instructions
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 1. Create Virtual Environment (Recommended)
 
-3. **Run the application:**
+Creating a virtual environment keeps your project dependencies isolated:
 
-   ```bash
-   python app.py
-   ```
+```bash
+# Create virtual environment
+python -m venv venv
 
-4. **Open in your browser:**
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
 
-   ```
-   http://localhost:5000
-   ```
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+You should see `(venv)` in your command prompt, indicating the virtual environment is active.
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If you don't have a `requirements.txt` file, install dependencies manually:
+
+```bash
+pip install Flask requests
+```
+
+### 3. Add Required Files
+
+Ensure these files are in your `templates` folder:
+
+- **logo.png** - Your application logo (500px width recommended)
+- **bg.png** - Background image (optional)
+
+### 4. Run the Application
+
+```bash
+python app.py
+```
+
+You should see output similar to:
+```
+* Running on all addresses (0.0.0.0)
+* Running on http://127.0.0.1:5000
+* Running on http://[your-ip]:5000
+```
+
+### 5. Open in Browser
+
+Navigate to: **http://localhost:5000**
+
+---
+
+## Project Backlog (Future Enhancements)
+
+### High Priority Items
+
+**Custom IP Lookup (3 days)**  
+Allow users to manually enter or paste any IP address or domain for lookup instead of only detecting their own.
+
+**UI/UX Improvements (3 days)**  
+Implement a dark/light theme toggle, add icons, and improve responsiveness for both desktop and mobile users.
+
+---
+
+### Medium Priority Items
+
+**VPN/Proxy Detection (3 days)**  
+Add functionality to detect and flag IPs associated with VPNs, proxies, or anonymizers for transparency.
+
+**Time Zone & Weather Information (2 days)**  
+Display the local time and weather conditions based on the detected IP’s location.
+
+**Data Export Feature (3 days)**  
+Enable exporting of IP details to formats like PDF, JSON, or TXT for documentation or sharing.
+
+---
+
+### Low Priority Items
+
+**Speed Test Integration (4 days)**  
+Add network speed and latency testing features to complement the IP and location details.
+
+**Search History / Recent Lookups (4 days)**  
+Store recent searches locally so users can quickly revisit previous IP results.
+
+**Multi-Language Support (5 days)**  
+Offer translation options for key UI text and location labels (e.g., English, Filipino, Spanish)..
 
 ---
 
@@ -163,5 +266,9 @@ IP-ADD-IDENTIFIER/
 * [Leaflet.js](https://leafletjs.com) – for map visualization
 * [Font Awesome](https://fontawesome.com) – for icons
 * [Google Fonts](https://fonts.google.com) – for typography
+
+---
+
+**Happy IP tracking! 🌐**
 
 
