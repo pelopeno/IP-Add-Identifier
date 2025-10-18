@@ -81,7 +81,7 @@ A modern Flask web application that displays comprehensive IP address informatio
 
 3. **Navigate to the project directory**
    ```bash
-   cd "C:\Users\Letson\OneDrive\Desktop\4ITE\SomethingIPAdd\IP-Add-Identifier"
+   cd "C:\your\path\name\yourfolder\SomethingIPAdd\IP-Add-Identifier"
    ```
 
 ### Method 2: Git Clone (For developers)
@@ -210,16 +210,19 @@ Offer translation options for key UI text and location labels (e.g., English, Fi
 ## Project Structure
 
 ```
-ip-address-identifier/
-├── app.py
+IP-ADD-IDENTIFIER/
+├── public/
+│   ├── images
+│       └── images.png
 ├── templates/
-│   └── index.html
-├── static/
 │   ├── css/
-│   │   └── style.css
+│   │   └── app.css
 │   └── js/
-│       └── script.js
-├── requirements.txt
+│       └── app.js
+├── bg.png
+├── index.html
+├── logo.png
+├── app.py
 └── README.md
 ```
 
