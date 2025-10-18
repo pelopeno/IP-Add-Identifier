@@ -4,17 +4,6 @@ A modern Flask web application that displays comprehensive IP address informatio
 
 ![IP Address Identifier](templates/logo.png)
 
-## Features
-
-- 🌐 **IP Detection**: Automatic IPv4 and IPv6 address detection
-- 📍 **Geolocation**: City, region, country, and coordinate information
-- 🏢 **Network Details**: ISP, organization, ASN, and connection type
-- 🗺️ **Interactive Map**: Leaflet-powered map with location markers
-- 🔒 **Privacy Controls**: Data sanitization and privacy notices
-- 📱 **Responsive Design**: Modern, mobile-friendly interface
-- ⚡ **Performance**: Intelligent caching and API fallbacks
-- 🎨 **Dark Theme**: Custom styled interface with yellow accents
-
 ## Screenshots
 
 ![Main Interface](public/images/image.png)
