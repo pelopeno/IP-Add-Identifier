@@ -97,3 +97,39 @@ def test_cache_result_works():
     t3 = sample(1)
     assert t1 != t3  # cache expired, new result generated
 
+def test_get_weather_and_time_missing_key():
+    """
+    If API key exists → temperature will be a float.
+    If API key is missing → temperature will be None and condition will be 'Unknown'.
+    Both behaviors are valid.
+    """
+    result = app.get_weather_and_time(14.6, 120.9, "Asia/Manila")
+
+    # Local time should always be returned
+    assert result["local_time"] != ""
+
+    temp = result["weather"]["temperature"]
+
+    # Accept either real weather or Unknown fallback
+    assert (temp is None) or (isinstance(temp, (int, float)))
+
+def test_lookup_structure():
+    result = app.lookup_ip_info("8.8.8.8")
+
+    expected_keys = [
+        "ipv4", "ipv6", "city", "region", "country",
+        "org", "isp", "asn", "latitude", "longitude",
+        "timezone", "postal", "connection_type",
+        "owner", "asn_org", "ip_type",
+        "privacy_notice", "is_private_ip", "data_retention"
+    ]
+
+    for key in expected_keys:
+        assert key in result
+
+def test_get_ip_info_structure():
+    result = app.get_ip_info()
+
+    assert "ipv4" in result
+    assert "ipv6" in result
+    assert "privacy_notice" in result

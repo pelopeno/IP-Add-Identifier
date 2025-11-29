@@ -290,6 +290,78 @@
         </div>
       </div>
 
+      <!-- Local Time Card -->
+      {% if ip_info.local_time and ip_info.local_time != 'Unknown' %}
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-clock"></i>
+          <h2>Local Time</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-hourglass-end"></i>
+                Current Time
+              </div>
+              <div class="info-value">{{ ip_info.local_time }}</div>
+            </div>
+            {% if ip_info.timezone %}
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-globe"></i>
+                Timezone
+              </div>
+              <div class="info-value">{{ ip_info.timezone }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Weather Card -->
+      {% if ip_info.weather %}
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-cloud-sun"></i>
+          <h2>Weather</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-cloud"></i>
+                Condition
+              </div>
+              <div class="info-value">{{ ip_info.weather.condition or 'Unknown' }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-thermometer-half"></i>
+                Temperature
+              </div>
+              <div class="info-value">{{ ip_info.weather.temperature or 'N/A' }} °C</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-wind"></i>
+                Feels Like
+              </div>
+              <div class="info-value">{{ ip_info.weather.feels_like or 'N/A' }} °C</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">
+                <i class="fas fa-droplet"></i>
+                Humidity
+              </div>
+              <div class="info-value">{{ ip_info.weather.humidity or 'N/A' }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Interactive Map -->
       <div class="card map-container">
         <div class="card-header">
@@ -351,6 +423,14 @@
         longitude: {{ ip_info.longitude | tojson if ip_info.longitude is not none else 'null' }},
         postal: {{ ip_info.postal | tojson if ip_info.postal else '""' }},
         connection_type: {{ ip_info.connection_type | tojson if ip_info.connection_type else '""' }},
+        timezone: {{ ip_info.timezone | tojson if ip_info.timezone else '""' }},
+        local_time: {{ ip_info.local_time | tojson if ip_info.local_time else '""' }},
+        weather: {
+          condition: {{ ip_info.weather.condition | tojson if ip_info.weather and ip_info.weather.condition else '""' }},
+          temperature: {{ ip_info.weather.temperature | tojson if ip_info.weather and ip_info.weather.temperature else 'null' }},
+          feels_like: {{ ip_info.weather.feels_like | tojson if ip_info.weather and ip_info.weather.feels_like else 'null' }},
+          humidity: {{ ip_info.weather.humidity | tojson if ip_info.weather and ip_info.weather.humidity else 'null' }}
+        },
         error: false
       };
       {% else %}
