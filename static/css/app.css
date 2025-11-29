@@ -504,5 +504,5 @@ body {
 }
 
 body {
-  background-image: url('/bg.png') !important;
+  background-image: url('/static/bg.png') !important;
 }
