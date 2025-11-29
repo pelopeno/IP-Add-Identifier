@@ -1,10 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import requests
 import logging
 import time
 from functools import wraps
+import ipaddress
 
-app = Flask(__name__, static_folder='templates', static_url_path='/')
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -40,12 +41,17 @@ def cache_result(timeout=300):
         return wrapper
     return decorator
 
+def validate_ip_address(ip):
+    """Validate if the provided string is a valid IP address"""
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
 @cache_result(timeout=300)
 def get_whois_info(ip):
-    """
-    Get WHOIS information for an IP address with rate limiting
-    Returns organization/ISP information
-    """
+    """Get WHOIS information for an IP address with rate limiting"""
     try:
         logger.info(f"Fetching WHOIS data for {ip}")
         whois_url = f"https://ipwhois.app/json/{ip}"
@@ -74,9 +80,7 @@ def get_whois_info(ip):
 
 @cache_result(timeout=300)
 def get_enhanced_ip_info(ip):
-    """
-    Get enhanced IP information including ISP details with rate limiting
-    """
+    """Get enhanced IP information including ISP details with rate limiting"""
     try:
         logger.info(f"Fetching enhanced IP data for {ip}")
         url = f"https://ipapi.co/{ip}/json/"
@@ -113,9 +117,7 @@ def get_enhanced_ip_info(ip):
     return None
 
 def sanitize_sensitive_data(data):
-    """
-    Sanitize sensitive information before displaying
-    """
+    """Sanitize sensitive information before displaying"""
     private_indicators = [
         'internal', 'private', 'corp', 'intranet', 'lan', 'vpn',
         'employee', 'staff', 'admin', 'secure'
@@ -143,24 +145,19 @@ def sanitize_sensitive_data(data):
     return data
 
 def is_private_ip(ip):
-    """
-    Check if IP address is in private range
-    """
+    """Check if IP address is in private range"""
     try:
-        import ipaddress
         ip_obj = ipaddress.ip_address(ip)
         return ip_obj.is_private
     except:
         if ip.startswith(('192.168.', '10.', '172.')):
             return True
-        if ip.startswith('127.'):  # Localhost dito
+        if ip.startswith('127.'):
             return True
         return False
 
 def add_privacy_notice(result):
-    """
-    Add privacy information to the result
-    """
+    """Add privacy information to the result"""
     privacy_info = {
         'privacy_notice': 'This information is publicly available through your internet connection.',
         'data_retention': 'Location data is approximate and cached temporarily for performance.',
@@ -175,59 +172,15 @@ def add_privacy_notice(result):
     result.update(privacy_info)
     return result
 
-def get_ip_info():
-    """
-    Fetch IP information with privacy controls
-    """
+def lookup_ip_info(ip_address):
+    """Lookup information for a specific IP address"""
     try:
-        cache_key = "current_ipv4"
-        current_time = time.time()
+        if not validate_ip_address(ip_address):
+            return {"error": "Invalid IP address format"}
         
-        if cache_key in _cache:
-            cached_time, ipv4 = _cache[cache_key]
-            if current_time - cached_time < 60:  
-                logger.info("Using cached IPv4 address")
-            else:
-                logger.info("Fetching fresh IPv4 address...")
-                ipv4_response = requests.get("https://api.ipify.org?format=json", timeout=10)
-                ipv4_response.raise_for_status()
-                ipv4 = ipv4_response.json().get("ip")
-                _cache[cache_key] = (current_time, ipv4)
-        else:
-            logger.info("Fetching IPv4 address...")
-            ipv4_response = requests.get("https://api.ipify.org?format=json", timeout=10)
-            ipv4_response.raise_for_status()
-            ipv4 = ipv4_response.json().get("ip")
-            _cache[cache_key] = (current_time, ipv4)
-        
-        ipv6 = "Not available"
-        try:
-            logger.info("Fetching IPv6 address...")
-            ipv6_response = requests.get("https://api64.ipify.org?format=json", timeout=5)
-            if ipv6_response.status_code == 200:
-                ipv6_data = ipv6_response.json()
-                fetched_ipv6 = ipv6_data.get("ip", "")
-                
-                if fetched_ipv6 and fetched_ipv6 != ipv4:
-                    if ':' in fetched_ipv6:
-                        ipv6 = fetched_ipv6
-                        logger.info(f"IPv6 address found: {ipv6}")
-                    else:
-                        logger.info("IPv6 service returned IPv4 address, no IPv6 available")
-                        ipv6 = "Not available"
-                else:
-                    logger.info("No IPv6 address available or same as IPv4")
-                    ipv6 = "Not available"
-        except Exception as e:
-            logger.warning(f"IPv6 fetch failed (non-critical): {e}")
-            ipv6 = "Not available"
-
-        if not ipv4:
-            raise Exception("Unable to determine IP address")
-
         result = {
-            "ipv4": ipv4,
-            "ipv6": ipv6,
+            "ipv4": ip_address,
+            "ipv6": "N/A",
             "city": "Unknown",
             "region": "Unknown", 
             "country": "Unknown",
@@ -248,25 +201,26 @@ def get_ip_info():
         apis_tried = 0
         max_apis = 3  
         
+        # Try primary API
         if apis_tried < max_apis:
             try:
                 apis_tried += 1
-                logger.info(f"Trying primary API (attempt {apis_tried}/{max_apis})")
-                geo_data = get_enhanced_ip_info(ipv4)
+                logger.info(f"Trying primary API for {ip_address}")
+                geo_data = get_enhanced_ip_info(ip_address)
                 if geo_data:
                     logger.info("Primary API successful")
                 else:
                     raise Exception("Primary API returned no data")
-                    
             except Exception as e:
                 logger.warning(f"Primary API failed: {e}")
                 geo_data = None
         
+        # Try fallback API
         if not geo_data and apis_tried < max_apis:
             try:
                 apis_tried += 1
-                logger.info(f"Trying fallback API ip-api.com (attempt {apis_tried}/{max_apis})")
-                fallback_url = f"http://ip-api.com/json/{ipv4}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,query"
+                logger.info(f"Trying fallback API ip-api.com")
+                fallback_url = f"http://ip-api.com/json/{ip_address}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,query"
                 fallback_response = requests.get(fallback_url, timeout=10)
                 fallback_response.raise_for_status()
                 fallback_data = fallback_response.json()
@@ -286,18 +240,16 @@ def get_ip_info():
                         "postal": fallback_data.get("zip")
                     }
                     logger.info("Fallback API successful")
-                else:
-                    raise Exception(fallback_data.get("message", "Fallback API failed"))
-                    
             except Exception as e:
                 logger.warning(f"Fallback API failed: {e}")
                 geo_data = None
 
+        # Try final fallback
         if not geo_data and apis_tried < max_apis:
             try:
                 apis_tried += 1
-                logger.info(f"Trying final fallback API ipinfo.io (attempt {apis_tried}/{max_apis})")
-                ipinfo_url = f"https://ipinfo.io/{ipv4}/json"
+                logger.info(f"Trying final fallback API ipinfo.io")
+                ipinfo_url = f"https://ipinfo.io/{ip_address}/json"
                 ipinfo_response = requests.get(ipinfo_url, timeout=10)
                 ipinfo_response.raise_for_status()
                 ipinfo_data = ipinfo_response.json()
@@ -318,10 +270,8 @@ def get_ip_info():
                     "postal": ipinfo_data.get("postal")
                 }
                 logger.info("Final fallback API successful")
-                
             except Exception as e:
                 logger.warning(f"Final fallback API failed: {e}")
-                logger.info("All geolocation APIs failed, returning basic IP info")
 
         if geo_data:
             result.update({
@@ -338,64 +288,111 @@ def get_ip_info():
                 "connection_type": geo_data.get("connection_type", "Unknown")
             })
             
+            # Get WHOIS data
             try:
-                whois_data = get_whois_info(ipv4)
+                whois_data = get_whois_info(ip_address)
                 if whois_data:
                     result.update({
                         "owner": whois_data.get("owner", result.get("org", "Unknown")),
                         "asn_org": whois_data.get("asn_org", "Unknown"),
                         "ip_type": whois_data.get("type", "Unknown")
                     })
-                    logger.info("WHOIS data added successfully")
             except Exception as e:
-                logger.warning(f"WHOIS lookup failed (non-critical): {e}")
+                logger.warning(f"WHOIS lookup failed: {e}")
 
         result = sanitize_sensitive_data(result)
         result = add_privacy_notice(result)
         
         if result.get('postal') and result['postal'] != 'Unknown':
-            result['postal'] = result['postal'][:3] + 'XXX'  
+            result['postal'] = result['postal'][:3] + 'XXX'
         
-        logger.info(f"IP info gathering completed. APIs tried: {apis_tried}")
         return result
             
-    except requests.exceptions.Timeout:
-        logger.error("Request timeout while fetching IP information")
-        return {"error": "Request timeout - please try again"}
-    except requests.exceptions.ConnectionError:
-        logger.error("Connection error while fetching IP information")
-        return {"error": "Connection error - please check your internet connection"}
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request error: {e}")
-        return {"error": f"Network error: {str(e)}"}
+    except Exception as e:
+        logger.error(f"Error looking up IP {ip_address}: {e}")
+        return {"error": f"An error occurred: {str(e)}"}
+
+def get_ip_info():
+    """Fetch current user's IP information with privacy controls"""
+    try:
+        cache_key = "current_ipv4"
+        current_time = time.time()
+        
+        if cache_key in _cache:
+            cached_time, ipv4 = _cache[cache_key]
+            if current_time - cached_time < 60:
+                logger.info("Using cached IPv4 address")
+            else:
+                logger.info("Fetching fresh IPv4 address...")
+                ipv4_response = requests.get("https://api.ipify.org?format=json", timeout=10)
+                ipv4_response.raise_for_status()
+                ipv4 = ipv4_response.json().get("ip")
+                _cache[cache_key] = (current_time, ipv4)
+        else:
+            logger.info("Fetching IPv4 address...")
+            ipv4_response = requests.get("https://api.ipify.org?format=json", timeout=10)
+            ipv4_response.raise_for_status()
+            ipv4 = ipv4_response.json().get("ip")
+            _cache[cache_key] = (current_time, ipv4)
+        
+        # Get IPv6
+        ipv6 = "Not available"
+        try:
+            logger.info("Fetching IPv6 address...")
+            ipv6_response = requests.get("https://api64.ipify.org?format=json", timeout=5)
+            if ipv6_response.status_code == 200:
+                ipv6_data = ipv6_response.json()
+                fetched_ipv6 = ipv6_data.get("ip", "")
+                
+                if fetched_ipv6 and fetched_ipv6 != ipv4:
+                    if ':' in fetched_ipv6:
+                        ipv6 = fetched_ipv6
+        except Exception as e:
+            logger.warning(f"IPv6 fetch failed: {e}")
+
+        if not ipv4:
+            raise Exception("Unable to determine IP address")
+
+        # Use lookup function for current IP
+        result = lookup_ip_info(ipv4)
+        result['ipv6'] = ipv6
+        
+        return result
+            
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return {"error": f"An error occurred: {str(e)}"}
 
 @app.route("/")
 def index():
-    """
-    Main route that renders the IP information page 
-    """
+    """Main route that renders the IP information page"""
     ip_info = get_ip_info()
     return render_template("index.html", ip_info=ip_info)
 
 @app.route("/api/ip-info")
 def api_ip_info():
-    """
-    API endpoint that returns IP information as JSON
-    """
-    return get_ip_info()
+    """API endpoint that returns IP information as JSON"""
+    return jsonify(get_ip_info())
+
+@app.route("/api/lookup", methods=['POST'])
+def api_lookup():
+    """API endpoint to lookup a specific IP address"""
+    data = request.get_json()
+    ip_address = data.get('ip', '').strip()
+    
+    if not ip_address:
+        return jsonify({"error": "IP address is required"}), 400
+    
+    result = lookup_ip_info(ip_address)
+    return jsonify(result)
 
 @app.route("/api/clear-cache", methods=['POST'])
 def clear_cache():
-    """
-    Clear the application cache
-    """
+    """Clear the application cache"""
     global _cache
     _cache.clear()
     logger.info("Cache cleared by user request")
-    return {"status": "success", "message": "Cache cleared successfully"}
+    return jsonify({"status": "success", "message": "Cache cleared successfully"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,10 +1,14 @@
 // Global variables for IP information
 let ipInfo = {};
-let isRefreshing = false; // Prevent multiple refresh attempts
+let isRefreshing = false;
+let currentMap = null;
+let isSearchMode = false;
+let originalIpInfo = {};
 
 // Initialize the application
 function initializeApp(ipData) {
     ipInfo = ipData;
+    originalIpInfo = { ...ipData }; // Save original IP data
     
     if (ipInfo && ipInfo.latitude && ipInfo.longitude && !ipInfo.error) {
         initializeMap();
@@ -26,14 +30,20 @@ function initializeMap() {
     const owner = ipInfo.owner || ipInfo.org || 'Unknown';
     const isp = ipInfo.isp || 'Unknown';
 
+    // Clear existing map if any
+    if (currentMap) {
+        currentMap.remove();
+        currentMap = null;
+    }
+
     // Initialize the map
-    const map = L.map('map').setView([latitude, longitude], 13);
+    currentMap = L.map('map').setView([latitude, longitude], 13);
 
     // Add OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
-    }).addTo(map);
+    }).addTo(currentMap);
 
     // Custom icon for the marker 
     const customIcon = L.divIcon({
@@ -44,11 +54,11 @@ function initializeMap() {
         popupAnchor: [0, -30]
     });
 
-    // Add marker w/ popup including owner info
-    const marker = L.marker([latitude, longitude], { icon: customIcon }).addTo(map);
+    // Add marker with popup including owner info
+    const marker = L.marker([latitude, longitude], { icon: customIcon }).addTo(currentMap);
     marker.bindPopup(`
         <div style="text-align: center; padding: 12px; background: hsl(67 41% 6%); color: hsl(69 68% 89%); border-radius: 8px; border: 1px solid hsl(66 49% 13%);">
-            <h4 style="margin: 0 0 12px 0; color: hsl(67 35% 57%);"><i class="fas fa-location-dot"></i> Your Location</h4>
+            <h4 style="margin: 0 0 12px 0; color: hsl(67 35% 57%);"><i class="fas fa-location-dot"></i> Location</h4>
             <p style="margin: 6px 0; color: hsl(69 68% 89%);"><strong>IP:</strong> ${ipv4}</p>
             <p style="margin: 6px 0; color: hsl(69 68% 89%);"><strong>Owner:</strong> ${owner}</p>
             <p style="margin: 6px 0; color: hsl(69 68% 89%);"><strong>ISP:</strong> ${isp}</p>
@@ -64,10 +74,10 @@ function initializeMap() {
         fillColor: 'hsl(67 35% 57%)',
         fillOpacity: 0.1,
         radius: 1000
-    }).addTo(map);
+    }).addTo(currentMap);
 }
 
-// when map is not available
+// Show when map is not available
 function showMapUnavailable() {
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -83,9 +93,162 @@ function showMapUnavailable() {
     }
 }
 
+// Update the UI with new IP data
+function updateUIWithIPData(data) {
+    if (data.error) {
+        showError(data.error);
+        return;
+    }
+
+    ipInfo = data;
+
+    // Update all info items
+    updateInfoValue('IPv4 Address', data.ipv4 || 'Not available');
+    updateInfoValue('IPv6 Address', data.ipv6 || 'Not available');
+    updateInfoValue('IP Owner', data.owner || data.org || 'Unknown');
+    updateInfoValue('ISP Provider', data.isp || 'Unknown');
+    updateInfoValue('ASN', data.asn || 'Unknown');
+    updateInfoValue('Connection Type', data.connection_type || 'Unknown');
+    updateInfoValue('Postal Code (Partial)', data.postal || 'Unknown');
+    updateInfoValue('City', data.city || 'Unknown');
+    updateInfoValue('Region', data.region || 'Unknown');
+    updateInfoValue('Country', data.country || 'Unknown');
+    
+    if (data.latitude && data.longitude) {
+        updateInfoValue('Coordinates', `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`);
+    } else {
+        updateInfoValue('Coordinates', 'Unknown');
+    }
+
+    // Reinitialize map
+    if (data.latitude && data.longitude) {
+        initializeMap();
+    } else {
+        showMapUnavailable();
+    }
+}
+
+// Helper function to update info values
+function updateInfoValue(label, value) {
+    const infoItems = document.querySelectorAll('.info-item');
+    infoItems.forEach(item => {
+        const labelElement = item.querySelector('.info-label');
+        if (labelElement && labelElement.textContent.includes(label)) {
+            const valueElement = item.querySelector('.info-value');
+            if (valueElement) {
+                valueElement.textContent = value;
+            }
+        }
+    });
+}
+
+// Search for IP address
+async function searchIPAddress() {
+    const searchInput = document.getElementById('ip-search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const ipAddress = searchInput.value.trim();
+
+    if (!ipAddress) {
+        alert('Please enter an IP address');
+        return;
+    }
+
+    // Basic IP validation
+    const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    
+    if (!ipv4Pattern.test(ipAddress) && !ipv6Pattern.test(ipAddress)) {
+        alert('Please enter a valid IP address');
+        return;
+    }
+
+    // Show loading state
+    const originalBtnContent = searchBtn.innerHTML;
+    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+    searchBtn.disabled = true;
+
+    try {
+        const response = await fetch('/api/lookup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ip: ipAddress })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Update UI with search results
+        isSearchMode = true;
+        updateUIWithIPData(data);
+
+        // Show search results header
+        const searchResultsHeader = document.getElementById('search-results-header');
+        const searchedIP = document.getElementById('searched-ip');
+        searchResultsHeader.style.display = 'flex';
+        searchedIP.textContent = ipAddress;
+
+        // Update mode badge
+        const modeToggle = document.getElementById('mode-toggle');
+        modeToggle.innerHTML = '<span class="mode-badge"><i class="fas fa-search"></i> Viewing Search Results</span>';
+
+        // Scroll to results
+        document.getElementById('main-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (error) {
+        console.error('Search error:', error);
+        alert(`Failed to lookup IP address: ${error.message}`);
+    } finally {
+        searchBtn.innerHTML = originalBtnContent;
+        searchBtn.disabled = false;
+    }
+}
+
+// Return to original IP view
+function backToMyIP() {
+    isSearchMode = false;
+    
+    // Hide search results header
+    const searchResultsHeader = document.getElementById('search-results-header');
+    searchResultsHeader.style.display = 'none';
+
+    // Update mode badge
+    const modeToggle = document.getElementById('mode-toggle');
+    modeToggle.innerHTML = '<span class="mode-badge"><i class="fas fa-user"></i> Viewing Your IP</span>';
+
+    // Clear search input
+    const searchInput = document.getElementById('ip-search-input');
+    searchInput.value = '';
+
+    // Restore original IP data
+    updateUIWithIPData(originalIpInfo);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Show error message
+function showError(message) {
+    const mainGrid = document.getElementById('main-grid');
+    mainGrid.innerHTML = `
+        <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-content">
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 // Refresh functionality with safety measures
 function refreshData() {
-    // Prevent multiple simultaneous refresh attempts
     if (isRefreshing) {
         console.log('Refresh already in progress, ignoring request');
         return;
@@ -101,10 +264,8 @@ function refreshData() {
         refreshIcon.className = 'loading';
         refreshText.textContent = 'Refreshing...';
 
-        // Add minimum delay and maximum timeout
-        const minDelay = 1000; // Minimum 1 second
-        const maxTimeout = 10000; // Maximum 10 seconds
-        
+        const minDelay = 1000;
+        const maxTimeout = 10000;
         const startTime = Date.now();
         
         const performRefresh = () => {
@@ -116,7 +277,6 @@ function refreshData() {
                     location.reload();
                 } catch (error) {
                     console.error('Refresh failed:', error);
-                    // Reset button state on error
                     isRefreshing = false;
                     refreshBtn.disabled = false;
                     refreshIcon.className = 'fas fa-sync-alt';
@@ -125,7 +285,6 @@ function refreshData() {
             }, remainingDelay);
         };
 
-        // Set maximum timeout to prevent hanging
         setTimeout(() => {
             if (isRefreshing) {
                 console.warn('Refresh timeout reached, forcing reload');
@@ -208,7 +367,6 @@ function clearCachedData() {
         clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
         clearBtn.disabled = true;
         
-        // Make request to clear server cache
         fetch('/api/clear-cache', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
@@ -236,13 +394,12 @@ function setupEventListeners() {
     if (refreshBtn) {
         let refreshTimeout;
         refreshBtn.addEventListener('click', function(e) {
-            // Prevent rapid clicking
             if (refreshTimeout) {
                 clearTimeout(refreshTimeout);
             }
             refreshTimeout = setTimeout(() => {
                 refreshData();
-            }, 100); // 100ms debounce
+            }, 100);
         });
     }
 
@@ -257,6 +414,28 @@ function setupEventListeners() {
     if (clearCacheBtn) {
         clearCacheBtn.addEventListener('click', clearCachedData);
     }
+
+    // Search button
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchIPAddress);
+    }
+
+    // Search input - Enter key
+    const searchInput = document.getElementById('ip-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchIPAddress();
+            }
+        });
+    }
+
+    // Back button
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', backToMyIP);
+    }
 }
 
 // Add page animations
@@ -266,7 +445,6 @@ function addPageAnimations() {
         card.style.animation = `fadeInUp 0.6s ease-out ${index * 0.1}s both`;
     });
 
-    // Add CSS for animations if not already present
     if (!document.querySelector('#animation-styles')) {
         const style = document.createElement('style');
         style.id = 'animation-styles';
@@ -290,7 +468,6 @@ function addPageAnimations() {
 window.addEventListener('error', function(event) {
     console.error('Global error caught:', event.error);
     
-    // Reset refresh state if there's an error
     if (isRefreshing) {
         isRefreshing = false;
         const refreshBtn = document.getElementById('refresh-btn');
@@ -306,6 +483,5 @@ window.addEventListener('error', function(event) {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // This will be called from the HTML template with the IP data
     console.log('App.js loaded - waiting for IP data...');
 });

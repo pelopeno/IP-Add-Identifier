@@ -17,12 +17,135 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  
+  <style>
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto 2rem auto;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 1rem;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      border: 2px solid grey;
+      box-shadow: var(--shadow-medium);
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      transition: var(--transition);
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 218, 58, 0.1);
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .btn-search {
+      padding: 0.75rem 1.5rem;
+      white-space: nowrap;
+    }
+    
+    .search-mode-toggle {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    
+    .mode-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: var(--bg-dark);
+      border-radius: var(--border-radius-sm);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .search-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card-bg);
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border);
+    }
+    
+    .search-results-header h3 {
+      margin: 0;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+    
+    .btn-back {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 0.5rem 1rem;
+    }
+    
+    .btn-back:hover {
+      background: var(--primary);
+      color: var(--bg-dark);
+    }
+  </style>
 </head>
 
 <body>
   <div class="container">
     <div class="header">
       <img src="{{ url_for('static', filename='logo.png') }}" />
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-container">
+      <div class="search-mode-toggle" id="mode-toggle">
+        <span class="mode-badge">
+          <i class="fas fa-user"></i> Viewing Your IP
+        </span>
+      </div>
+      
+      <div class="search-box">
+        <input 
+          type="text" 
+          id="ip-search-input" 
+          class="search-input" 
+          placeholder="Enter IP address to lookup (e.g., 8.8.8.8)"
+          pattern="^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$"
+        >
+        <button class="btn btn-primary btn-search" id="search-btn">
+          <i class="fas fa-search"></i>
+          <span>Search</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Results Header (hidden by default) -->
+    <div class="search-results-header" id="search-results-header" style="display: none;">
+      <h3>
+        <i class="fas fa-search"></i> 
+        Search Results for: <span id="searched-ip"></span>
+      </h3>
+      <button class="btn btn-back" id="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to My IP
+      </button>
     </div>
 
     {% if ip_info.error %}
@@ -53,7 +176,7 @@
     </div>
     <br>
 
-    <div class="main-grid">
+    <div class="main-grid" id="main-grid">
       <!-- Network Information Card -->
       <div class="card">
         <div class="card-header">
@@ -177,14 +300,12 @@
           <div id="map"></div>
           <div class="map-disclaimer">
             <i class="fas fa-info-circle"></i>
-            <small>Location is approximate and may not reflect your exact position. Based on IP geolocation
-              data.</small>
+            <small>Location is approximate and may not reflect exact position. Based on IP geolocation data.</small>
           </div>
         </div>
       </div>
     </div>
     {% endif %}
-
 
     <!-- Privacy Notice -->
     {% if ip_info.privacy_notice %}
@@ -205,7 +326,6 @@
     {% endif %}
   </div>
 
-
   <!-- Leaflet JavaScript -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -218,30 +338,34 @@
     document.addEventListener('DOMContentLoaded', function () {
       {% if not ip_info.error %}
       const ipData = {
-        ipv4: {{ ip_info.ipv4| tojson if ip_info.ipv4 else '""'
-    }},
-      ipv6: {{ ip_info.ipv6 | tojson if ip_info.ipv6 else '""' }},
-      city: {{ ip_info.city | tojson if ip_info.city else '""' }},
-      region: {{ ip_info.region | tojson if ip_info.region else '""' }},
-      country: {{ ip_info.country | tojson if ip_info.country else '""' }},
-      org: {{ ip_info.org | tojson if ip_info.org else '""' }},
-      latitude: {{ ip_info.latitude | tojson if ip_info.latitude is not none else 'null' }},
-      longitude: {{ ip_info.longitude | tojson if ip_info.longitude is not none else 'null' }},
-      error: false
+        ipv4: {{ ip_info.ipv4 | tojson if ip_info.ipv4 else '""' }},
+        ipv6: {{ ip_info.ipv6 | tojson if ip_info.ipv6 else '""' }},
+        city: {{ ip_info.city | tojson if ip_info.city else '""' }},
+        region: {{ ip_info.region | tojson if ip_info.region else '""' }},
+        country: {{ ip_info.country | tojson if ip_info.country else '""' }},
+        org: {{ ip_info.org | tojson if ip_info.org else '""' }},
+        owner: {{ ip_info.owner | tojson if ip_info.owner else '""' }},
+        isp: {{ ip_info.isp | tojson if ip_info.isp else '""' }},
+        asn: {{ ip_info.asn | tojson if ip_info.asn else '""' }},
+        latitude: {{ ip_info.latitude | tojson if ip_info.latitude is not none else 'null' }},
+        longitude: {{ ip_info.longitude | tojson if ip_info.longitude is not none else 'null' }},
+        postal: {{ ip_info.postal | tojson if ip_info.postal else '""' }},
+        connection_type: {{ ip_info.connection_type | tojson if ip_info.connection_type else '""' }},
+        error: false
       };
-    {% else %}
-    const ipData = {
-      error: true,
-      errorMessage: {{ ip_info.error| tojson }}
+      {% else %}
+      const ipData = {
+        error: true,
+        errorMessage: {{ ip_info.error | tojson }}
       };
-    {% endif %}
+      {% endif %}
 
-    // Initialize the app with IP data
-    if (typeof initializeApp === 'function') {
-      initializeApp(ipData);
-    } else {
-      console.error('initializeApp function not found. Make sure app.js is loaded correctly.');
-    }
+      // Initialize the app with IP data
+      if (typeof initializeApp === 'function') {
+        initializeApp(ipData);
+      } else {
+        console.error('initializeApp function not found. Make sure app.js is loaded correctly.');
+      }
     });
   </script>
 </body>
