@@ -443,9 +443,30 @@ def api_lookup():
     
     if not ip_address:
         return jsonify({"error": "IP address is required"}), 400
-    
-    return jsonify(lookup_ip_info(ip_address))
 
+    # Step 1: Lookup basic IP info
+    result = lookup_ip_info(ip_address)
+
+    # If lookup error happen → return early
+    if "error" in result:
+        return jsonify(result)
+
+    # Step 2: Weather + Time (only if lat + lon)
+    lat = result.get("latitude")
+    lon = result.get("longitude")
+    tz  = result.get("timezone")
+
+    if lat and lon and tz:
+        weather_time = get_weather_and_time(lat, lon, tz)
+
+        result["local_time"] = weather_time.get("local_time", "Unknown")
+        result["timezone"] = weather_time.get("timezone", tz)
+        result["weather"] = weather_time.get("weather", None)
+    else:
+        result["local_time"] = "Unknown"
+        result["weather"] = None
+
+    return jsonify(result)
 
 @app.route("/api/clear-cache", methods=['POST'])
 def clear_cache():
@@ -456,3 +477,6 @@ def clear_cache():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+THIS IS A SYNTAX ERROR
+

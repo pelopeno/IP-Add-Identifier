@@ -9,13 +9,13 @@ let originalIpInfo = {};
 function initializeApp(ipData) {
     ipInfo = ipData;
     originalIpInfo = { ...ipData }; // Save original IP data
-    
+
     if (ipInfo && ipInfo.latitude && ipInfo.longitude && !ipInfo.error) {
         initializeMap();
     } else {
         showMapUnavailable();
     }
-    
+
     setupEventListeners();
     addPageAnimations();
 }
@@ -113,7 +113,7 @@ function updateUIWithIPData(data) {
     updateInfoValue('City', data.city || 'Unknown');
     updateInfoValue('Region', data.region || 'Unknown');
     updateInfoValue('Country', data.country || 'Unknown');
-    
+
     if (data.latitude && data.longitude) {
         updateInfoValue('Coordinates', `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`);
     } else {
@@ -126,6 +126,24 @@ function updateUIWithIPData(data) {
     } else {
         showMapUnavailable();
     }
+
+    // --- NEW: Update Local Time ---
+    if (data.local_time) {
+        updateInfoValue('Current Time', data.local_time);
+    }
+
+    if (data.timezone) {
+        updateInfoValue('Timezone', data.timezone);
+    }
+
+    // --- NEW: Update Weather ---
+    if (data.weather) {
+        updateInfoValue('Condition', data.weather.condition || 'Unknown');
+        updateInfoValue('Temperature', (data.weather.temperature || 'N/A') + ' °C');
+        updateInfoValue('Feels Like', (data.weather.feels_like || 'N/A') + ' °C');
+        updateInfoValue('Humidity', (data.weather.humidity || 'N/A') + '%');
+    }
+
 }
 
 // Helper function to update info values
@@ -156,7 +174,7 @@ async function searchIPAddress() {
     // Basic IP validation
     const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
     const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-    
+
     if (!ipv4Pattern.test(ipAddress) && !ipv6Pattern.test(ipAddress)) {
         alert('Please enter a valid IP address');
         return;
@@ -211,7 +229,7 @@ async function searchIPAddress() {
 // Return to original IP view
 function backToMyIP() {
     isSearchMode = false;
-    
+
     // Hide search results header
     const searchResultsHeader = document.getElementById('search-results-header');
     searchResultsHeader.style.display = 'none';
@@ -267,11 +285,11 @@ function refreshData() {
         const minDelay = 1000;
         const maxTimeout = 10000;
         const startTime = Date.now();
-        
+
         const performRefresh = () => {
             const elapsed = Date.now() - startTime;
             const remainingDelay = Math.max(0, minDelay - elapsed);
-            
+
             setTimeout(() => {
                 try {
                     location.reload();
@@ -300,7 +318,7 @@ function refreshData() {
 function copyToClipboard() {
     if (ipInfo && ipInfo.ipv4 && !ipInfo.error) {
         const ip = ipInfo.ipv4;
-        
+
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(ip).then(() => {
                 showCopySuccess();
@@ -323,7 +341,7 @@ function fallbackCopyToClipboard(text) {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
         document.execCommand('copy');
         showCopySuccess();
@@ -344,7 +362,7 @@ function showCopySuccess() {
             borderColor: btn.style.borderColor,
             color: btn.style.color
         };
-        
+
         btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
         btn.style.background = 'hsl(146 17% 59%)';
         btn.style.borderColor = 'hsl(146 17% 59%)';
@@ -366,7 +384,7 @@ function clearCachedData() {
         const originalText = clearBtn.innerHTML;
         clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
         clearBtn.disabled = true;
-        
+
         fetch('/api/clear-cache', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
@@ -393,7 +411,7 @@ function setupEventListeners() {
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
         let refreshTimeout;
-        refreshBtn.addEventListener('click', function(e) {
+        refreshBtn.addEventListener('click', function (e) {
             if (refreshTimeout) {
                 clearTimeout(refreshTimeout);
             }
@@ -424,7 +442,7 @@ function setupEventListeners() {
     // Search input - Enter key
     const searchInput = document.getElementById('ip-search-input');
     if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
+        searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 searchIPAddress();
             }
@@ -465,9 +483,9 @@ function addPageAnimations() {
 }
 
 // Add error boundary for the entire app
-window.addEventListener('error', function(event) {
+window.addEventListener('error', function (event) {
     console.error('Global error caught:', event.error);
-    
+
     if (isRefreshing) {
         isRefreshing = false;
         const refreshBtn = document.getElementById('refresh-btn');
@@ -482,6 +500,6 @@ window.addEventListener('error', function(event) {
 });
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('App.js loaded - waiting for IP data...');
 });
