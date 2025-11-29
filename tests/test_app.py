@@ -133,3 +133,6 @@ def test_get_ip_info_structure():
     assert "ipv4" in result
     assert "ipv6" in result
     assert "privacy_notice" in result
+
+def test_force_fail():
+    assert False
