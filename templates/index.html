@@ -410,33 +410,28 @@
     document.addEventListener('DOMContentLoaded', function () {
       {% if not ip_info.error %}
       const ipData = {
-        ipv4: {{ ip_info.ipv4 | tojson if ip_info.ipv4 else '""' }},
-        ipv6: {{ ip_info.ipv6 | tojson if ip_info.ipv6 else '""' }},
-        city: {{ ip_info.city | tojson if ip_info.city else '""' }},
-        region: {{ ip_info.region | tojson if ip_info.region else '""' }},
-        country: {{ ip_info.country | tojson if ip_info.country else '""' }},
-        org: {{ ip_info.org | tojson if ip_info.org else '""' }},
-        owner: {{ ip_info.owner | tojson if ip_info.owner else '""' }},
-        isp: {{ ip_info.isp | tojson if ip_info.isp else '""' }},
-        asn: {{ ip_info.asn | tojson if ip_info.asn else '""' }},
-        latitude: {{ ip_info.latitude | tojson if ip_info.latitude is not none else 'null' }},
-        longitude: {{ ip_info.longitude | tojson if ip_info.longitude is not none else 'null' }},
-        postal: {{ ip_info.postal | tojson if ip_info.postal else '""' }},
-        connection_type: {{ ip_info.connection_type | tojson if ip_info.connection_type else '""' }},
-        timezone: {{ ip_info.timezone | tojson if ip_info.timezone else '""' }},
-        local_time: {{ ip_info.local_time | tojson if ip_info.local_time else '""' }},
-        weather: {
-          condition: {{ ip_info.weather.condition | tojson if ip_info.weather and ip_info.weather.condition else '""' }},
-          temperature: {{ ip_info.weather.temperature | tojson if ip_info.weather and ip_info.weather.temperature else 'null' }},
-          feels_like: {{ ip_info.weather.feels_like | tojson if ip_info.weather and ip_info.weather.feels_like else 'null' }},
-          humidity: {{ ip_info.weather.humidity | tojson if ip_info.weather and ip_info.weather.humidity else 'null' }}
-        },
+        ipv4: {{ (ip_info.ipv4 | tojson) | safe }},
+        ipv6: {{ (ip_info.ipv6 | tojson) | safe }},
+        city: {{ (ip_info.city | tojson) | safe }},
+        region: {{ (ip_info.region | tojson) | safe }},
+        country: {{ (ip_info.country | tojson) | safe }},
+        org: {{ (ip_info.org | tojson) | safe }},
+        owner: {{ (ip_info.owner | tojson) | safe }},
+        isp: {{ (ip_info.isp | tojson) | safe }},
+        asn: {{ (ip_info.asn | tojson) | safe }},
+        latitude: {{ (ip_info.latitude | tojson) | safe }},
+        longitude: {{ (ip_info.longitude | tojson) | safe }},
+        postal: {{ (ip_info.postal | tojson) | safe }},
+        connection_type: {{ (ip_info.connection_type | tojson) | safe }},
+        timezone: {{ (ip_info.timezone | tojson) | safe }},
+        local_time: {{ (ip_info.local_time | tojson) | safe }},
+        weather: {{ (ip_info.weather | tojson) | safe }},
         error: false
       };
       {% else %}
       const ipData = {
         error: true,
-        errorMessage: {{ ip_info.error | tojson }}
+        errorMessage: {{ (ip_info.error | tojson) | safe }}
       };
       {% endif %}
 
