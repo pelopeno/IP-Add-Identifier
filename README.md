@@ -2,26 +2,26 @@
 
 A modern web application that provides detailed insights about IP addresses — including **geolocation data**, **network details**, **local time**, **weather conditions**, and an **interactive map visualization**. Designed with privacy and clarity in mind.
 
-![IP Address Identifier Banner](screenshots/main-interface.png)
+![IP Address Identifier Banner](screenshots/screenshots/screenshot1.png)
 
 ---
 
 ## 📸 Screenshots
 
 ### IP Address Lookup
-![Search Feature](screenshots/screenshot1.png)
+![Search Feature](screenshots/screenshots/screenshot1.png)
 *Search any public IP address and get instant results*
 
 ### Main Interface & IP Address Lookup
-![Main Interface](screenshots/screenshot2.png)
+![Main Interface](screenshots/screenshots/screenshot2.png)
 *Clean, modern interface showing network and location information*
 
 ### Weather & Time Display
-![Weather Display](screenshots/screenshot3.png)
+![Weather Display](screenshots/screenshots/screenshot3.png)
 *Live weather conditions and local time at IP location*
 
 ### Interactive Map
-![Map View](screenshots/screenshot4.png)
+![Map View](screenshots/screenshots/screenshot4.png)
 *Visualize IP location with interactive Leaflet.js map*
 
 ---
