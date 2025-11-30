@@ -2,6 +2,28 @@
 
 A modern web application that provides detailed insights about IP addresses — including **geolocation data**, **network details**, **local time**, **weather conditions**, and an **interactive map visualization**. Designed with privacy and clarity in mind.
 
+![IP Address Identifier Banner](screenshots/main-interface.png)
+
+---
+
+## 📸 Screenshots
+
+### IP Address Lookup
+![Search Feature](screenshots/screenshot1.png)
+*Search any public IP address and get instant results*
+
+### Main Interface & IP Address Lookup
+![Main Interface](screenshots/screenshot2.png)
+*Clean, modern interface showing network and location information*
+
+### Weather & Time Display
+![Weather Display](screenshots/screenshot3.png)
+*Live weather conditions and local time at IP location*
+
+### Interactive Map
+![Map View](screenshots/screenshot4.png)
+*Visualize IP location with interactive Leaflet.js map*
+
 ---
 
 ## Features
@@ -212,25 +234,28 @@ See `SETUP_WEATHER.md` for detailed instructions.
 
 ```
 ip-address-identifier/
-├── app.py                      # Main Flask application
-├── requirements.txt            # Python dependencies
-├── README.md                   # This file
-├── SETUP_WEATHER.md           # Weather API setup guide
-├── .env                        # Environment variables (create this)
-├── .gitignore                 # Git ignore file
+├── app.py
+├── requirements.txt
+├── README.md
+├── screenshots/              # 📸 Application screenshots
+│   ├── main-interface.png
+│   ├── search-feature.png
+│   ├── weather-display.png
+│   ├── map-view.png
+│   └── demo.gif
 ├── templates/
-│   ├── index.html             # Main HTML template
-│   ├── logo.png               # Application logo
-│   ├── bg.png                 # Background image
+│   ├── index.html
+│   ├── logo.png
+│   ├── bg.png
 │   ├── css/
-│   │   └── app.css            # Main stylesheet
+│   │   └── app.css
 │   └── js/
-│       └── app.js             # Client-side JavaScript
+│       └── app.js
 └── static/
     ├── css/
-    │   └── app.css            # Main stylesheet
+    │   └── app.css
     └── js/
-        └── app.js             # Client-side JavaScript
+        └── app.js
 ```
 
 ---
